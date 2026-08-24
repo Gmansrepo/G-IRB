@@ -60,7 +60,7 @@ const steps = [
 ];
 ---
 
-<figure class="cal-root bleed" data-step="0">
+<figure class="cal-root bleed">
   <div class="cal-layout">
     <div class="cal-sticky">
       <div class="cal-card">
@@ -315,6 +315,9 @@ const steps = [
 <script>
   const root = document.querySelector<HTMLElement>('.cal-root');
   if (root) {
+    // Set only once JS is running: without it the stylesheet's
+    // :not([data-step]) rule keeps every layer visible.
+    root.setAttribute('data-step', '0');
     const steps = Array.from(root.querySelectorAll<HTMLElement>('.cal-steps section'));
     // Activate the step whose midpoint is nearest the viewport centre.
     const io = new IntersectionObserver(
