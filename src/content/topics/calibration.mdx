@@ -1,0 +1,97 @@
+---
+title: "Calibration: from observed default rates to a PD per grade"
+summary: "A rating system that ranks perfectly can still be wrong about the level. Calibration is what fixes the level — and the long-run average, the central tendency and the margin of conservatism are the three things doing the work."
+date: 2026-08-24
+tags: ["PD", "calibration", "EBA/GL/2017/16"]
+---
+
+import CalibrationLadder from '../../components/viz/CalibrationLadder.astro';
+
+There are two separate questions you can ask of a rating system, and confusing them
+causes most of the arguments.
+
+The first is **discrimination**: does it put the riskier obligors in the riskier
+grades? That is a question about ordering, and Gini or AUC answers it.
+
+The second is **calibration**: is grade 4 actually a 1.2% chance of default? That is
+a question about level, and a model can be excellent at the first while being badly
+wrong at the second. A rating system that ranks flawlessly but assigns PDs half the
+size of reality produces an ordered, confident, and materially undercapitalised book.
+
+Calibration is the machinery that fixes the level.
+
+<CalibrationLadder />
+
+## Why the long-run average, and not something else
+
+The instinct is to use recent data — it reflects the portfolio as it is now. The
+guidelines push hard the other way, and the reason is visible in the spread above.
+
+A one-year default rate is a draw from a distribution whose mean moves with the
+economy. Calibrate on 2019 and you anchor to a benign year. Calibrate on 2020 and you
+anchor to a crisis. Neither is the long-run behaviour of the portfolio; both are a
+single sample from a cycle that has not finished.
+
+The long-run average default rate is the attempt to average the cycle out. This is
+what makes an IRB PD closer to **through-the-cycle** than **point-in-time** — not a
+modelling preference, but a direct consequence of anchoring to a multi-year mean.
+
+It also explains why the length and composition of the observation period gets so
+much scrutiny. An observation period containing no downturn does not produce a
+long-run average; it produces a benign-period average wearing the right label. That
+is a data problem no amount of statistical sophistication repairs, and it is
+precisely the situation the margin of conservatism exists to cover.
+
+## Central tendency is a constraint, not an output
+
+The fitted curve above is a reasonable description of the grades. It is not yet a
+calibration, because nothing has forced it to reproduce the portfolio's own default
+experience.
+
+The central tendency is that constraint: the long-run average default rate of the
+calibration segment as a whole. The requirement is that the obligor-weighted mean of
+the assigned PDs equals it. In the figure the fitted curve gives 2.116% against an
+observed 2.145%, so every grade is scaled by 1.0138.
+
+Here the adjustment is small, which is the healthy case — it means the fit was
+already broadly consistent with the portfolio. A large anchor scalar is a signal
+worth chasing down rather than applying quietly: it usually means the grade
+distribution has shifted, the segment is not homogeneous, or the fit is fighting the
+data somewhere.
+
+Note the direction of the logic. You do not fit a curve and report whatever average
+falls out. You fit a curve and then **force** its average to the observed one. The
+central tendency has authority over the fit, not the other way around.
+
+## The margin of conservatism is deliberate bias
+
+The last step adds 10%, and it is worth being precise about what that number is.
+
+It is not a safety factor sprinkled on for comfort, and it is not an error bar. It is
+a deliberate upward bias applied because the estimate is known to be uncertain, and
+because the consequences of being too low are asymmetric. EBA/GL/2017/16 organises it
+into categories — data and methodological deficiencies, changes in underwriting or
+recovery processes, and general estimation error — and expects each to be justified
+and quantified separately rather than bundled into one round number.
+
+The consequence is that a calibrated PD is *not* a best estimate. It is a best
+estimate that has been pushed upward on purpose. Anyone comparing IRB PDs against
+realised default rates and finding them consistently too high has not found a bug —
+they have found the margin of conservatism working as designed.
+
+## Why the level matters more than it looks
+
+The [supervisory formula](/G-IRB/topics/supervisory-formula) is steepest at low PD.
+Moving grade 3 from 0.39% to 0.46% — the difference between the long-run average and
+the calibrated PD in the table above — is a small absolute change and a large
+relative one, and the risk-weight curve amplifies exactly that kind of move.
+
+This is why calibration disputes are never academic. Discrimination arguments change
+which obligors sit in which grade. Calibration arguments change the capital
+requirement of the entire book at once, and they do it hardest in the good grades
+where most of the exposure usually lives.
+
+---
+
+*Next: what happens when the observation period does not contain a downturn, and how
+downturn LGD handles the same problem from the other side.*

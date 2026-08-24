@@ -1,0 +1,333 @@
+---
+/**
+ * Scroll-driven explainer for PD calibration.
+ *
+ * The chart is rendered once as stacked SVG layers; each scroll step just
+ * toggles layer opacity via a data-step attribute on the root, so the
+ * transitions are pure CSS and there is no redraw on scroll.
+ *
+ * Without JavaScript every layer stays visible and the steps read as plain
+ * prose, so the figure still makes sense.
+ */
+import d from '../../data/calibration.json';
+
+const pct = (v: number, dp = 3) => (v * 100).toFixed(dp) + '%';
+
+// ---- geometry (viewBox units) ----
+const W = 620, H = 430, M = { t: 22, r: 22, b: 46, l: 54 };
+const PW = W - M.l - M.r, PH = H - M.t - M.b;
+
+const Y_MIN = 0.0002, Y_MAX = 0.45;
+const ly = (v: number) =>
+  M.t + PH * (1 - Math.log(Math.max(v, Y_MIN) / Y_MIN) / Math.log(Y_MAX / Y_MIN));
+const bx = (i: number) => M.l + (PW / d.grades.length) * (i + 0.5);
+
+const yTicks = [0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3];
+const tick = (v: number) => {
+  const p = v * 100;
+  return (p < 1 ? p.toFixed(p < 0.1 ? 2 : 1) : p.toFixed(0)) + '%';
+};
+
+const line = (vals: number[]) =>
+  vals.map((v, i) => `${i ? 'L' : 'M'}${bx(i).toFixed(1)} ${ly(v).toFixed(1)}`).join('');
+
+const steps = [
+  {
+    n: 'Observed',
+    h: 'Ten years of observed default rates',
+    p: `Every dot is one grade in one year — ${d.grades.length} grades over ${d.years.length} years. The vertical spread within a grade is the economic cycle, not a ranking failure: ${d.years[5]} and ${d.years[6]} sit far above the rest. Hollow markers on the floor are grade-years with <em>no defaults at all</em> — grade 1 has eight of them.`,
+  },
+  {
+    n: 'Long-run average',
+    h: 'Collapse each grade to its long-run average',
+    p: 'The one-year default rates are averaged across the full observation period. This is the quantity the guidelines anchor to — not the most recent year, and not the worst one.',
+  },
+  {
+    n: 'Fit',
+    h: 'Fit a monotone curve through the averages',
+    p: 'Grades are ordinal, so the fit runs log-linear in the grade index. It smooths the sampling noise, which matters most in grade 7 where only 120 obligors carry the estimate.',
+  },
+  {
+    n: 'Central tendency',
+    h: 'Anchor the curve to the central tendency',
+    p: `The obligor-weighted mean of the fitted PDs is ${pct(d.ct / d.k, 3)}, against an observed central tendency of ${pct(d.ct, 3)}. Every grade is scaled by ${d.k} so the portfolio reproduces the long-run rate.`,
+  },
+  {
+    n: 'Conservatism',
+    h: 'Add the margin of conservatism',
+    p: `A ${(d.moc * 100).toFixed(0)}% margin covers estimation error and data deficiencies. It is applied on top of the anchored curve, so the calibrated PDs deliberately sit above the best estimate.`,
+  },
+];
+---
+
+<figure class="cal-root bleed" data-step="0">
+  <div class="cal-layout">
+    <div class="cal-sticky">
+      <div class="cal-card">
+        <div class="cal-head">
+          <span class="cal-title">Default rate by grade</span>
+          <span class="cal-legend">
+            <span class="lg lg-obs">observed</span>
+            <span class="lg lg-lra">long-run avg</span>
+            <span class="lg lg-cal">calibrated</span>
+          </span>
+        </div>
+
+        <svg viewBox={`0 0 ${W} ${H}`} role="img"
+             aria-label="Observed default rates by rating grade, and the calibrated PD curve derived from them">
+          <!-- grid + axes -->
+          <g class="cal-grid">
+            {yTicks.map((v) => (
+              <>
+                <line x1={M.l} y1={ly(v)} x2={M.l + PW} y2={ly(v)} />
+                <text class="cal-tick" x={M.l - 8} y={ly(v) + 3.4} text-anchor="end">{tick(v)}</text>
+              </>
+            ))}
+            <line class="cal-axis" x1={M.l} y1={M.t + PH} x2={M.l + PW} y2={M.t + PH} />
+            {d.grades.map((g, i) => (
+              <text class="cal-tick" x={bx(i)} y={M.t + PH + 18} text-anchor="middle">{g}</text>
+            ))}
+            <text class="cal-axis-title" x={M.l} y={M.t + PH + 38}>Rating grade</text>
+            <text class="cal-axis-title" x={M.l} y={M.t - 8}>Default rate</text>
+          </g>
+
+          <!-- central tendency reference -->
+          <g class="lyr lyr-ct">
+            <line x1={M.l} y1={ly(d.ct)} x2={M.l + PW} y2={ly(d.ct)} />
+            <text class="cal-ct-label" x={M.l + PW - 2} y={ly(d.ct) - 7} text-anchor="end">
+              central tendency {pct(d.ct, 2)}
+            </text>
+          </g>
+
+          <!-- observed yearly points; zero-default years cannot sit on a log
+               axis, so they are pinned to a floor band and drawn hollow -->
+          <g class="lyr lyr-obs">
+            {d.obs.map((row, gi) =>
+              row.map((v, yi) => {
+                const cx = bx(gi) + (yi - (d.years.length - 1) / 2) * 4.6;
+                const dn = d.years[yi] === 2020 || d.years[yi] === 2021;
+                return v > 0 ? (
+                  <circle cx={cx} cy={ly(v)} r="2.6" class={dn ? 'downturn' : ''} />
+                ) : (
+                  <circle cx={cx} cy={M.t + PH - 7} r="2.4" class={dn ? 'zero downturn' : 'zero'} />
+                );
+              })
+            )}
+            <text class="cal-zero-label" x={M.l + 3} y={M.t + PH - 15}>no defaults observed</text>
+          </g>
+
+          <!-- long-run averages -->
+          <g class="lyr lyr-lra">
+            {d.lra.map((v, i) => (
+              <>
+                <line x1={bx(i) - 13} y1={ly(v)} x2={bx(i) + 13} y2={ly(v)} />
+                <circle cx={bx(i)} cy={ly(v)} r="3.6" />
+              </>
+            ))}
+          </g>
+
+          <!-- fitted curve -->
+          <g class="lyr lyr-fit"><path d={line(d.fit)} /></g>
+
+          <!-- anchored curve -->
+          <g class="lyr lyr-anchored"><path d={line(d.anchored)} /></g>
+
+          <!-- final calibrated curve -->
+          <g class="lyr lyr-final">
+            <path d={line(d.final)} />
+            {d.final.map((v, i) => <circle cx={bx(i)} cy={ly(v)} r="3.4" />)}
+          </g>
+        </svg>
+
+        <dl class="cal-readout">
+          <div><dt>Central tendency</dt><dd>{pct(d.ct, 3)}</dd></div>
+          <div><dt>Anchor scalar</dt><dd class="w-anch">{d.k}</dd></div>
+          <div><dt>Margin of conservatism</dt><dd class="w-moc">{(d.moc * 100).toFixed(0)}%</dd></div>
+          <div class="w-mean">
+            <dt>Obligor-weighted mean PD</dt>
+            <dd>
+              <span class="wm wm-none">&mdash;</span>
+              <span class="wm wm-fit">{pct(d.ct / d.k, 3)}</span>
+              <span class="wm wm-anch">{pct(d.ct, 3)}</span>
+              <span class="wm wm-final">{pct(d.ct * (1 + d.moc), 3)}</span>
+            </dd>
+            <p class="wm-note">
+              <span class="wm wm-none">not yet fitted</span>
+              <span class="wm wm-fit">below the central tendency</span>
+              <span class="wm wm-anch">equals the central tendency</span>
+              <span class="wm wm-final">central tendency &times; {(1 + d.moc).toFixed(2)}</span>
+            </p>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="cal-steps">
+      {steps.map((s, i) => (
+        <section data-i={i}>
+          <p class="cal-step-n">{String(i + 1).padStart(2, '0')} &middot; {s.n}</p>
+          <h3>{s.h}</h3>
+          <p class="cal-step-p" set:html={s.p} />
+        </section>
+      ))}
+    </div>
+  </div>
+
+  <table class="cal-table">
+    <caption>Calibrated PD per grade, and the chain that produced it</caption>
+    <thead>
+      <tr>
+        <th scope="col">Grade</th><th scope="col">Obligors</th>
+        <th scope="col">Long-run avg</th><th scope="col">Fitted</th>
+        <th scope="col">Anchored</th><th scope="col">Calibrated PD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {d.grades.map((g, i) => (
+        <tr>
+          <th scope="row">{g}</th>
+          <td>{d.nObligors[i].toLocaleString('en-GB')}</td>
+          <td>{pct(d.lra[i])}</td>
+          <td>{pct(d.fit[i])}</td>
+          <td>{pct(d.anchored[i])}</td>
+          <td class="fin">{pct(d.final[i])}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <figcaption class="cal-cap">
+    Synthetic portfolio, built to behave like a real one. The calibrated PDs are
+    obligor-weighted to {pct(d.ct * (1 + d.moc), 3)} &mdash; the central tendency times the
+    margin of conservatism &mdash; which is the arithmetic identity the whole exercise exists
+    to satisfy. Illustrative; not a substitute for EBA/GL/2017/16.
+  </figcaption>
+</figure>
+
+<style is:global>
+  .cal-root { margin: 34px 0; display: block; }
+  .cal-layout { display: grid; grid-template-columns: 370px minmax(0, 1fr); gap: 44px; align-items: start; }
+  .cal-sticky { grid-column: 2; grid-row: 1; position: sticky; top: 32px; }
+  .cal-steps { grid-column: 1; grid-row: 1; }
+
+  .cal-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; padding: 18px 20px 16px; }
+  .cal-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  .cal-title { font-family: var(--font-display); font-size: 17px; }
+  .cal-legend { display: flex; gap: 14px; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); }
+  .lg { display: inline-flex; align-items: center; gap: 5px; }
+  .lg::before { content: ''; width: 12px; height: 2px; background: currentColor; }
+  .lg-obs { color: var(--ink-3); }
+  .lg-lra { color: var(--teal); }
+  .lg-cal { color: var(--accent); }
+
+  .cal-root svg { display: block; width: 100%; height: auto; }
+  .cal-grid line { stroke: var(--rule-2); stroke-width: 1; }
+  .cal-grid line.cal-axis { stroke: var(--rule); }
+  .cal-tick { font-family: var(--font-mono); font-size: 10px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .cal-axis-title { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-3); letter-spacing: .11em; text-transform: uppercase; }
+
+  .lyr { transition: opacity .5s ease; }
+  .lyr-obs circle { fill: var(--ink-3); opacity: .5; }
+  .lyr-obs circle.downturn { fill: var(--amber); opacity: .85; }
+  .lyr-obs circle.zero { fill: none; stroke: var(--ink-3); stroke-width: 1.2; opacity: .75; }
+  .lyr-obs circle.zero.downturn { stroke: var(--amber); fill: none; }
+  .cal-zero-label { font-family: var(--font-mono); font-size: 8.5px; fill: var(--ink-3); letter-spacing: .06em; }
+  .lyr-lra line { stroke: var(--teal); stroke-width: 2; }
+  .lyr-lra circle { fill: var(--teal); }
+  .lyr-fit path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; }
+  .lyr-anchored path { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .lyr-final path { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .lyr-final circle { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
+  .lyr-ct line { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; }
+  .cal-ct-label { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-2); }
+
+  /* --- step choreography: only opacity changes --- */
+  .cal-root[data-step] .lyr { opacity: 0; }
+  .cal-root[data-step='0'] .lyr-obs { opacity: 1; }
+  .cal-root[data-step='1'] .lyr-obs { opacity: .32; }
+  .cal-root[data-step='1'] .lyr-lra { opacity: 1; }
+  .cal-root[data-step='2'] .lyr-obs { opacity: .16; }
+  .cal-root[data-step='2'] .lyr-lra { opacity: 1; }
+  .cal-root[data-step='2'] .lyr-fit { opacity: 1; }
+  .cal-root[data-step='3'] .lyr-lra { opacity: .3; }
+  .cal-root[data-step='3'] .lyr-fit { opacity: .35; }
+  .cal-root[data-step='3'] .lyr-anchored { opacity: 1; }
+  .cal-root[data-step='3'] .lyr-ct { opacity: 1; }
+  .cal-root[data-step='4'] .lyr-anchored { opacity: .3; }
+  .cal-root[data-step='4'] .lyr-final { opacity: 1; }
+  .cal-root[data-step='4'] .lyr-ct { opacity: 1; }
+
+  .cal-readout { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 14px 0 0; border-radius: 2px; overflow: hidden; }
+  .cal-readout > div { background: var(--surface); padding: 9px 11px; }
+  .cal-readout dt { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .cal-readout dd { margin: 2px 0 0; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .w-mean { position: relative; }
+  .w-mean dd { color: var(--accent); }
+  .wm-note { margin: 1px 0 0; font-size: 9px; color: var(--ink-3); font-family: var(--font-body); line-height: 1.3; }
+  .cal-root .wm { display: none; }
+  .cal-root[data-step='0'] .wm-none, .cal-root[data-step='1'] .wm-none,
+  .cal-root[data-step='2'] .wm-fit,
+  .cal-root[data-step='3'] .wm-anch,
+  .cal-root[data-step='4'] .wm-final { display: inline; }
+  .cal-root:not([data-step]) .wm-final { display: inline; }
+
+  .cal-steps section { min-height: 74vh; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .cal-steps section:last-child { min-height: 52vh; }
+  .cal-step-n { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+  .cal-steps h3 { font-family: var(--font-display); font-weight: 400; font-size: 25px; line-height: 1.15; }
+  .cal-step-p { color: var(--ink-2); font-size: 14.5px; max-width: 46ch; }
+  .cal-root[data-step] .cal-steps section { transition: opacity .35s ease; opacity: .3; }
+  .cal-root[data-step='0'] section[data-i='0'],
+  .cal-root[data-step='1'] section[data-i='1'],
+  .cal-root[data-step='2'] section[data-i='2'],
+  .cal-root[data-step='3'] section[data-i='3'],
+  .cal-root[data-step='4'] section[data-i='4'] { opacity: 1; }
+
+  .cal-table { width: 100%; border-collapse: collapse; margin-top: 34px; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .cal-table caption { text-align: left; font-family: var(--font-body); font-size: 12px; color: var(--ink-3); padding-bottom: 9px; }
+  .cal-table th, .cal-table td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--rule-2); }
+  .cal-table thead th { font-weight: 500; font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--rule); }
+  .cal-table tbody th { text-align: left; color: var(--ink); font-weight: 500; }
+  .cal-table td { color: var(--ink-2); }
+  .cal-table td.fin { color: var(--accent); font-weight: 500; }
+
+  .cal-cap { margin: 20px 0 0; font-size: 12px; color: var(--ink-3); max-width: 78ch; line-height: 1.5; }
+
+  @media (max-width: 900px) {
+    .cal-layout { grid-template-columns: 1fr; gap: 16px; }
+    .cal-sticky, .cal-steps { grid-column: 1; }
+    .cal-sticky { grid-row: 1; top: 0; padding: 10px 0; background: var(--ground); z-index: 2; }
+    .cal-steps { grid-row: 2; }
+    .cal-steps section { min-height: 62vh; }
+    .cal-readout { grid-template-columns: repeat(2, 1fr); }
+    .cal-table { display: block; overflow-x: auto; }
+  }
+
+  /* No JS, or reduced motion: show every layer, no dimming. */
+  @media (prefers-reduced-motion: reduce) {
+    .cal-root .lyr { transition: none; }
+    .cal-root .cal-steps section { transition: none; }
+  }
+  .cal-root:not([data-step]) .lyr { opacity: 1; }
+  .cal-root:not([data-step]) .cal-steps section { opacity: 1; }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.cal-root');
+  if (root) {
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('.cal-steps section'));
+    // Activate the step whose midpoint is nearest the viewport centre.
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const i = e.target.getAttribute('data-i');
+            if (i !== null) root.setAttribute('data-step', i);
+          }
+        });
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 }
+    );
+    steps.forEach((s) => io.observe(s));
+  }
+</script>
