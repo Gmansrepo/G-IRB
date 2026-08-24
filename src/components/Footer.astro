@@ -1,0 +1,32 @@
+---
+import { url } from '../lib/url';
+const year = new Date().getFullYear();
+---
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p>
+      G&#8209;IRB &mdash; a working knowledge base on internal ratings&#8209;based models.
+      Illustrative throughout; not a substitute for the regulation.
+    </p>
+    <p class="links">
+      <a href={url('topics')}>Topics</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href={url('regulations')}>Regulations</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href={url('about')}>About</a>
+    </p>
+    <p class="cr">&copy; {year} G&#8209;IRB</p>
+  </div>
+</footer>
+
+<style>
+  .foot { margin-top: auto; border-top: 1px solid var(--rule); }
+  .foot-inner {
+    padding-block: 26px 40px;
+    display: flex; flex-direction: column; gap: 8px;
+    font-size: 12.5px; color: var(--ink-3);
+  }
+  .foot p { max-width: 70ch; }
+  .links { display: flex; gap: 10px; align-items: baseline; }
+  .cr { font-family: var(--font-mono); font-size: 11.5px; }
+</style>

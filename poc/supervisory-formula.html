@@ -1,0 +1,463 @@
+<title>The Supervisory Formula</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+
+<style>
+:root{
+  --ground:#F0F2F1; --surface:#FAFBFA; --surface-2:#E7EAE8;
+  --ink:#121815; --ink-2:#5A635E; --ink-3:#8A938E;
+  --rule:#D3D8D5; --rule-2:#E3E7E5;
+  --accent:#A63A2E; --accent-soft:#A63A2E1F; --accent-ink:#8A2E24;
+  --teal:#1F6F72; --amber:#B0721F;
+  --focus:#1F6F72;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#101412; --surface:#181E1B; --surface-2:#222926;
+    --ink:#E8EDEA; --ink-2:#9AA5A0; --ink-3:#6E7975;
+    --rule:#2C3430; --rule-2:#232B27;
+    --accent:#E0705C; --accent-soft:#E0705C24; --accent-ink:#EE8975;
+    --teal:#5FB8BB; --amber:#D9A44B;
+    --focus:#5FB8BB;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101412; --surface:#181E1B; --surface-2:#222926;
+  --ink:#E8EDEA; --ink-2:#9AA5A0; --ink-3:#6E7975;
+  --rule:#2C3430; --rule-2:#232B27;
+  --accent:#E0705C; --accent-soft:#E0705C24; --accent-ink:#EE8975;
+  --teal:#5FB8BB; --amber:#D9A44B;
+  --focus:#5FB8BB;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:48px 28px 72px}
+
+/* ---------- masthead ---------- */
+.masthead{display:flex; flex-direction:column; gap:14px; padding-bottom:28px; border-bottom:1px solid var(--rule); margin-bottom:36px}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+h1{
+  font-family:"Newsreader",Georgia,serif; font-weight:400; font-size:clamp(2.3rem,5.2vw,3.5rem);
+  line-height:1.04; letter-spacing:-.015em; margin:0; text-wrap:balance;
+}
+h1 em{font-style:italic; color:var(--accent)}
+.lede{max-width:60ch; color:var(--ink-2); font-size:16.5px; margin:0}
+
+/* ---------- instrument grid ---------- */
+.instrument{display:grid; grid-template-columns:296px minmax(0,1fr); gap:28px; align-items:start}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:20px}
+.rail{display:flex; flex-direction:column; gap:18px}
+
+.card-title{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 16px
+}
+
+/* ---------- controls ---------- */
+.classlist{display:flex; flex-direction:column; gap:1px; margin-bottom:22px}
+.classlist button{
+  font:inherit; font-size:13.5px; text-align:left; cursor:pointer;
+  background:transparent; color:var(--ink-2); border:0; border-left:2px solid var(--rule-2);
+  padding:7px 12px; transition:color .15s, border-color .15s, background .15s;
+}
+.classlist button:hover{color:var(--ink); background:var(--surface-2)}
+.classlist button[aria-pressed="true"]{color:var(--ink); border-left-color:var(--accent); font-weight:500; background:var(--surface-2)}
+.classlist button:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+
+.ctl{display:flex; flex-direction:column; gap:7px; margin-bottom:18px}
+.ctl.is-off{opacity:.38; pointer-events:none}
+.ctl-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.ctl-head label{font-size:13px; color:var(--ink-2)}
+.ctl-head .val{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:14px; font-variant-numeric:tabular-nums; color:var(--ink); font-weight:500}
+.ctl-note{font-size:11.5px; color:var(--ink-3); font-style:italic}
+
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:18px; background:transparent; cursor:grab; margin:0}
+input[type=range]:active{cursor:grabbing}
+input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--rule); border-radius:0}
+input[type=range]::-moz-range-track{height:2px; background:var(--rule)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px; margin-top:-5.5px; border-radius:50%; background:var(--accent); border:2px solid var(--surface)}
+input[type=range]::-moz-range-thumb{width:13px; height:13px; border-radius:50%; background:var(--accent); border:2px solid var(--surface)}
+input[type=range]:focus-visible{outline:2px solid var(--focus); outline-offset:3px; border-radius:2px}
+
+.toggle{display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-2); cursor:pointer; padding-top:6px; border-top:1px solid var(--rule-2)}
+.toggle input{accent-color:var(--accent); width:14px; height:14px; cursor:pointer}
+
+/* ---------- charts ---------- */
+.chart-head{display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:6px; flex-wrap:wrap}
+.chart-head h2{font-family:"Newsreader",Georgia,serif; font-weight:400; font-size:20px; margin:0}
+.legend{display:flex; gap:16px; font-size:11.5px; color:var(--ink-2); font-family:"IBM Plex Mono",ui-monospace,monospace}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.swatch{width:14px; height:2px; display:inline-block}
+svg{display:block; width:100%; height:auto; overflow:visible}
+#rchart{max-width:280px}
+.tick{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; fill:var(--ink-3); font-variant-numeric:tabular-nums}
+.axis-title{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; fill:var(--ink-3); letter-spacing:.1em; text-transform:uppercase}
+.ghost-label{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--ink-3)}
+.curve{fill:none; stroke:var(--accent); stroke-width:2; stroke-linejoin:round; stroke-linecap:round}
+.ghost{fill:none; stroke:var(--ink-3); stroke-width:1; opacity:.4}
+.grid{stroke:var(--rule-2); stroke-width:1}
+.axis{stroke:var(--rule); stroke-width:1}
+
+/* ---------- stat tiles ---------- */
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin-top:18px}
+.stat{background:var(--surface); padding:14px 16px; display:flex; flex-direction:column; gap:3px}
+.stat dt{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3); margin:0}
+.stat dd{margin:0; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:23px; font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1.15}
+.stat.is-key dd{color:var(--accent)}
+.stat small{font-size:11px; color:var(--ink-3); font-family:"Archivo",sans-serif}
+
+/* ---------- formula ---------- */
+.formula-block{margin-top:44px; padding-top:32px; border-top:1px solid var(--rule)}
+.formula{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:clamp(13px,1.65vw,17px);
+  line-height:2.5; overflow-x:auto; padding:8px 0 4px; white-space:nowrap; color:var(--ink-2);
+}
+.formula b{font-weight:500; color:var(--ink)}
+.t{position:relative; color:var(--ink); border-bottom:1.5px solid var(--accent-soft); padding:2px 1px; cursor:default; transition:background .15s}
+.t:hover,.t:focus{background:var(--accent-soft); outline:none}
+.terms{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin-top:22px}
+.term{background:var(--surface); padding:13px 15px}
+.term .k{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12.5px; color:var(--accent); font-weight:500}
+.term .v{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:17px; font-variant-numeric:tabular-nums; color:var(--ink); margin-top:1px}
+.term .d{font-size:11.5px; color:var(--ink-3); line-height:1.4; margin-top:5px}
+
+footer{margin-top:46px; padding-top:20px; border-top:1px solid var(--rule); color:var(--ink-3); font-size:12.5px; max-width:78ch}
+footer p{margin:0 0 7px}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.94em; color:var(--ink-2)}
+
+@media (max-width:900px){
+  .instrument{grid-template-columns:1fr}
+  .rail .card{max-width:520px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .terms{grid-template-columns:repeat(2,1fr)}
+  .wrap{padding:32px 18px 56px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">CRR Art. 153 &middot; 155 &middot; 154 &nbsp;/&nbsp; IRB risk-weight function</div>
+  <h1>How one formula turns a<br>default probability into <em>capital</em></h1>
+  <p class="lede">The IRB approach compresses an entire credit portfolio into a single closed-form curve. Move the inputs and watch the whole thing respond &mdash; the correlation drifts, the maturity adjustment stretches, and the risk weight follows.</p>
+</header>
+
+<div class="instrument">
+
+  <aside class="rail">
+    <div class="card">
+      <p class="card-title">Exposure class</p>
+      <div class="classlist" id="classlist"></div>
+
+      <div class="ctl" id="ctl-pd">
+        <div class="ctl-head"><label for="pd">Probability of default</label><span class="val" id="pd-val"></span></div>
+        <input type="range" id="pd" min="0" max="1000" value="521">
+      </div>
+
+      <div class="ctl" id="ctl-lgd">
+        <div class="ctl-head"><label for="lgd">Loss given default</label><span class="val" id="lgd-val"></span></div>
+        <input type="range" id="lgd" min="1" max="100" value="45">
+      </div>
+
+      <div class="ctl" id="ctl-m">
+        <div class="ctl-head"><label for="m">Effective maturity</label><span class="val" id="m-val"></span></div>
+        <input type="range" id="m" min="1" max="5" step="0.1" value="2.5">
+        <span class="ctl-note" id="m-note"></span>
+      </div>
+
+      <div class="ctl" id="ctl-s" hidden>
+        <div class="ctl-head"><label for="s">Annual turnover</label><span class="val" id="s-val"></span></div>
+        <input type="range" id="s" min="5" max="50" step="1" value="25">
+        <span class="ctl-note">Firm-size adjustment, &euro;5m&ndash;&euro;50m</span>
+      </div>
+
+      <label class="toggle"><input type="checkbox" id="compare"> Overlay other exposure classes</label>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Asset correlation &nbsp;R(PD)</p>
+      <svg id="rchart" viewBox="0 0 256 132" role="img" aria-label="Asset correlation as a function of probability of default"></svg>
+    </div>
+  </aside>
+
+  <section>
+    <div class="card">
+      <div class="chart-head">
+        <h2>Risk weight against PD</h2>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--accent)"></i> selected</span>
+          <span id="lg-ghost" hidden><i class="swatch" style="background:var(--ink-3); opacity:.5"></i> other classes</span>
+        </div>
+      </div>
+      <svg id="chart" viewBox="0 0 760 396" role="img" aria-label="Risk weight as a function of probability of default"></svg>
+    </div>
+
+    <dl class="stats">
+      <div class="stat"><dt>Correlation R</dt><dd id="s-r"></dd><small id="s-r-sub"></small></div>
+      <div class="stat"><dt>Capital K</dt><dd id="s-k"></dd><small>per unit of EAD</small></div>
+      <div class="stat is-key"><dt>Risk weight</dt><dd id="s-rw"></dd><small>12.5 &times; K</small></div>
+      <div class="stat"><dt>Own funds</dt><dd id="s-cap"></dd><small id="s-cap-sub">8% of RWA, &euro;10m EAD</small></div>
+    </dl>
+  </section>
+</div>
+
+<section class="formula-block">
+  <div class="eyebrow" style="margin-bottom:14px">The formula, with your inputs substituted</div>
+  <div class="formula">
+    <b>K</b> &nbsp;=&nbsp; [ <span class="t" id="f-lgd" tabindex="0">LGD</span> &middot; <b>N</b>( <span class="t" id="f-g" tabindex="0">G(PD)</span> / &radic;<span class="t" id="f-1r" tabindex="0">(1&minus;R)</span> &nbsp;+&nbsp; &radic;<span class="t" id="f-rr" tabindex="0">(R/(1&minus;R))</span> &middot; <span class="t" id="f-q" tabindex="0">G(0.999)</span> ) &nbsp;&minus;&nbsp; <span class="t" id="f-pdlgd" tabindex="0">PD &middot; LGD</span> ] &nbsp;&middot;&nbsp; <span class="t" id="f-ma" tabindex="0">MA</span>
+  </div>
+  <div class="terms" id="terms"></div>
+</section>
+
+<footer>
+  <p><strong>Reading it.</strong> The inner <code>N(&middot;)</code> is a conditional default probability: the share of the portfolio that defaults when the single systematic factor lands at its 99.9th-percentile worst outcome. Subtracting <code>PD &middot; LGD</code> strips out expected loss, which is covered by provisions rather than capital &mdash; so <code>K</code> is unexpected loss alone.</p>
+  <p><strong>Why the curve bends.</strong> Correlation <code>R</code> falls from 0.24 to 0.12 as PD rises: a borrower already close to default is driven more by its own circumstances than by the economy. That decay is what flattens the right-hand side of the curve.</p>
+  <p>Retail classes carry no maturity adjustment. The 1.06 scaling factor from Basel II is not applied. The dotted rule marks the 0.03% PD floor under CRR Art. 160(1) and 163(1). Illustrative only &mdash; not a substitute for the regulation.</p>
+</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- normal distribution ---------- */
+function cdf(x){
+  var p=0.2316419, t=1/(1+p*Math.abs(x));
+  var d=0.3989422804014327*Math.exp(-x*x/2);
+  var y=1-d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+  return x>=0? y : 1-y;
+}
+function inv(p){
+  if(p<=0) return -Infinity; if(p>=1) return Infinity;
+  var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],
+      b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],
+      c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],
+      d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+  var pl=0.02425, q, r;
+  if(p<pl){ q=Math.sqrt(-2*Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  if(p>1-pl){ q=Math.sqrt(-2*Math.log(1-p));
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  q=p-0.5; r=q*q;
+  return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+}
+var Q999=inv(0.999);
+
+/* ---------- exposure classes ---------- */
+function wf(pd,k){ return (1-Math.exp(-k*pd))/(1-Math.exp(-k)); }
+function corpR(pd){ var w=wf(pd,50); return 0.12*w+0.24*(1-w); }
+
+var CLASSES={
+  corp:{label:"Corporate, sovereign, institution", short:"Corporate", mat:true,
+        R:function(pd){return corpR(pd);}, lgd:45},
+  sme:{label:"Corporate SME", short:"SME", mat:true, size:true,
+        R:function(pd,s){return corpR(pd)-0.04*(1-(Math.min(50,Math.max(5,s))-5)/45);}, lgd:45},
+  mort:{label:"Retail — residential mortgage", short:"Mortgage", mat:false,
+        R:function(){return 0.15;}, lgd:25},
+  qrre:{label:"Qualifying revolving retail", short:"QRRE", mat:false,
+        R:function(){return 0.04;}, lgd:55},
+  oret:{label:"Other retail", short:"Other retail", mat:false,
+        R:function(pd){var w=wf(pd,35); return 0.03*w+0.16*(1-w);}, lgd:45}
+};
+var ORDER=["corp","sme","mort","qrre","oret"];
+
+function calc(pd,lgd,m,key,s){
+  var C=CLASSES[key], R=C.R(pd,s);
+  var cond=cdf(inv(pd)/Math.sqrt(1-R)+Math.sqrt(R/(1-R))*Q999);
+  var k=lgd*cond-pd*lgd, ma=1, b=0;
+  if(C.mat){ b=Math.pow(0.11852-0.05478*Math.log(pd),2); ma=(1+(m-2.5)*b)/(1-1.5*b); k*=ma; }
+  k=Math.max(k,0);
+  return {R:R,cond:cond,k:k,ma:ma,b:b,rw:k*12.5};
+}
+
+/* ---------- state ---------- */
+var PD_MIN=0.0003, PD_MAX=0.30;
+var state={cls:"corp", pd:0.01, lgd:0.45, m:2.5, s:25, compare:false};
+
+var $=function(id){return document.getElementById(id);};
+var pdFromSlider=function(v){ return PD_MIN*Math.pow(PD_MAX/PD_MIN, v/1000); };
+var sliderFromPd=function(pd){ return 1000*Math.log(pd/PD_MIN)/Math.log(PD_MAX/PD_MIN); };
+var pct=function(x,d){ return (x*100).toFixed(d==null?2:d)+"%"; };
+function pdText(pd){
+  var v=pd*100;
+  return (v<0.1? v.toFixed(3) : v.toFixed(2))+"%";
+}
+function tickText(pd){
+  var v=pd*100, t=v.toFixed(2).replace(/\.?0+$/,"");
+  return t+"%";
+}
+
+/* ---------- class buttons ---------- */
+var cl=$("classlist");
+ORDER.forEach(function(k){
+  var btn=document.createElement("button");
+  btn.type="button"; btn.textContent=CLASSES[k].label;
+  btn.setAttribute("aria-pressed", k===state.cls?"true":"false");
+  btn.addEventListener("click", function(){
+    state.cls=k; state.lgd=CLASSES[k].lgd/100;
+    $("lgd").value=CLASSES[k].lgd;
+    Array.prototype.forEach.call(cl.children,function(b,i){ b.setAttribute("aria-pressed", ORDER[i]===k?"true":"false"); });
+    render();
+  });
+  cl.appendChild(btn);
+});
+
+$("pd").addEventListener("input",function(){ state.pd=pdFromSlider(+this.value); render(); });
+$("lgd").addEventListener("input",function(){ state.lgd=+this.value/100; render(); });
+$("m").addEventListener("input",function(){ state.m=+this.value; render(); });
+$("s").addEventListener("input",function(){ state.s=+this.value; render(); });
+$("compare").addEventListener("change",function(){ state.compare=this.checked; render(); });
+$("pd").value=Math.round(sliderFromPd(state.pd));
+
+/* ---------- geometry ---------- */
+var W=760,H=396,M={t:16,r:84,b:44,l:52};
+var PW=W-M.l-M.r, PH=H-M.t-M.b;
+var lx=function(pd){ return M.l+PW*Math.log(pd/PD_MIN)/Math.log(PD_MAX/PD_MIN); };
+
+function curvePath(key,lgd,m,s,ymax){
+  var d="",N=170;
+  for(var i=0;i<=N;i++){
+    var pd=PD_MIN*Math.pow(PD_MAX/PD_MIN,i/N);
+    var rw=calc(pd,lgd,m,key,s).rw;
+    var x=lx(pd), y=M.t+PH*(1-Math.min(rw,ymax)/ymax);
+    d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);
+  }
+  return d;
+}
+
+function drawChart(cur){
+  var ymax=0;
+  for(var i=0;i<=60;i++){
+    var pd=PD_MIN*Math.pow(PD_MAX/PD_MIN,i/60);
+    ymax=Math.max(ymax,calc(pd,state.lgd,state.m,state.cls,state.s).rw);
+  }
+  ymax=Math.max(1.5,Math.ceil(ymax/0.5)*0.5);
+
+  var s="", yStep=ymax<=2?0.25:0.5;
+  for(var v=0;v<=ymax+1e-9;v+=yStep){
+    var y=M.t+PH*(1-v/ymax);
+    s+='<line class="'+(v===0?"axis":"grid")+'" x1="'+M.l+'" y1="'+y.toFixed(1)+'" x2="'+(M.l+PW)+'" y2="'+y.toFixed(1)+'"/>';
+    s+='<text class="tick" x="'+(M.l-9)+'" y="'+(y+3.4).toFixed(1)+'" text-anchor="end">'+(v*100).toFixed(0)+'%</text>';
+  }
+  [0.0003,0.001,0.003,0.01,0.03,0.1,0.3].forEach(function(pd){
+    var x=lx(pd);
+    s+='<line class="grid" x1="'+x.toFixed(1)+'" y1="'+M.t+'" x2="'+x.toFixed(1)+'" y2="'+(M.t+PH)+'"/>';
+    s+='<text class="tick" x="'+x.toFixed(1)+'" y="'+(M.t+PH+17)+'" text-anchor="middle">'+tickText(pd)+'</text>';
+  });
+  s+='<text class="axis-title" x="'+M.l+'" y="'+(M.t+PH+38)+'">PD &mdash; log scale</text>';
+  s+='<text class="axis-title" x="'+M.l+'" y="'+(M.t-4)+'">Risk weight</text>';
+
+  var xf=lx(0.0003);
+  s+='<line x1="'+xf.toFixed(1)+'" y1="'+M.t+'" x2="'+xf.toFixed(1)+'" y2="'+(M.t+PH)+'" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>';
+
+  if(state.compare){
+    ORDER.forEach(function(k){
+      if(k===state.cls) return;
+      var d=curvePath(k,state.lgd,state.m,state.s,ymax);
+      s+='<path class="ghost" d="'+d+'"/>';
+      var endRw=calc(PD_MAX,state.lgd,state.m,k,state.s).rw;
+      var ey=M.t+PH*(1-Math.min(endRw,ymax)/ymax);
+      s+='<text class="ghost-label" x="'+(M.l+PW+6)+'" y="'+(ey+3).toFixed(1)+'">'+CLASSES[k].short+'</text>';
+    });
+  }
+
+  s+='<path class="curve" d="'+curvePath(state.cls,state.lgd,state.m,state.s,ymax)+'"/>';
+
+  var cx=lx(state.pd), cy=M.t+PH*(1-Math.min(cur.rw,ymax)/ymax);
+  s+='<line x1="'+cx.toFixed(1)+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+(M.t+PH)+'" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>';
+  s+='<line x1="'+M.l+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+cy.toFixed(1)+'" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>';
+  s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>';
+
+  var lbl=(cur.rw*100).toFixed(1)+"%";
+  var anchor=cx<M.l+92?"start":"end", dx=anchor==="end"?-12:12;
+  s+='<text x="'+(cx+dx).toFixed(1)+'" y="'+(cy-13).toFixed(1)+'" text-anchor="'+anchor+'"'
+    +' font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500"'
+    +' fill="var(--accent)" stroke="var(--surface)" stroke-width="3.5" paint-order="stroke"'
+    +' stroke-linejoin="round">'+lbl+'</text>';
+
+  $("chart").innerHTML=s;
+}
+
+function drawR(){
+  var w=256,h=132,m={t:12,r:34,b:24,l:34}, pw=w-m.l-m.r, ph=h-m.t-m.b;
+  var X=function(pd){ return m.l+pw*Math.log(pd/PD_MIN)/Math.log(PD_MAX/PD_MIN); };
+  var Y=function(r){ return m.t+ph*(1-r/0.30); };
+  var s="";
+  [0,0.12,0.24,0.30].forEach(function(v){
+    s+='<line class="'+(v===0?"axis":"grid")+'" x1="'+m.l+'" y1="'+Y(v).toFixed(1)+'" x2="'+(m.l+pw)+'" y2="'+Y(v).toFixed(1)+'"/>';
+    s+='<text class="tick" x="'+(m.l-6)+'" y="'+(Y(v)+3.2).toFixed(1)+'" text-anchor="end">'+v.toFixed(2)+'</text>';
+  });
+  var d="";
+  for(var i=0;i<=90;i++){
+    var pd=PD_MIN*Math.pow(PD_MAX/PD_MIN,i/90);
+    d+=(i?"L":"M")+X(pd).toFixed(1)+" "+Y(CLASSES[state.cls].R(pd,state.s)).toFixed(1);
+  }
+  s+='<path d="'+d+'" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>';
+  var R=CLASSES[state.cls].R(state.pd,state.s);
+  s+='<circle cx="'+X(state.pd).toFixed(1)+'" cy="'+Y(R).toFixed(1)+'" r="4" fill="var(--teal)" stroke="var(--surface)" stroke-width="2"/>';
+  s+='<text class="tick" x="'+m.l+'" y="'+(h-6)+'">0.03%</text>';
+  s+='<text class="tick" x="'+(m.l+pw)+'" y="'+(h-6)+'" text-anchor="end">30%</text>';
+  $("rchart").innerHTML=s;
+}
+
+/* ---------- terms table ---------- */
+var TERMS=[
+  ["R","Asset correlation",function(c){return c.R.toFixed(4);},"Exposure to the single systematic factor."],
+  ["G(PD)","Inverse normal of PD",function(c,st){return inv(st.pd).toFixed(4);},"PD restated as a standard-normal threshold."],
+  ["G(0.999)","99.9% quantile",function(){return Q999.toFixed(4);},"The supervisory confidence level. Fixed."],
+  ["N(·)","Conditional PD",function(c){return c.cond.toFixed(4);},"Default rate in the 1-in-1000 stress state."],
+  ["b","Maturity slope",function(c,st){return CLASSES[st.cls].mat?c.b.toFixed(4):"—";},"Smoothing coefficient in the maturity term."],
+  ["MA","Maturity adjustment",function(c,st){return CLASSES[st.cls].mat?c.ma.toFixed(4):"1.0000";},"Scales K for exposures longer than 2.5 years."]
+];
+
+function drawTerms(cur){
+  $("terms").innerHTML=TERMS.map(function(t){
+    return '<div class="term"><div class="k">'+t[0]+'</div><div class="v">'+t[2](cur,state)+'</div><div class="d">'+t[3]+'</div></div>';
+  }).join("");
+}
+
+/* ---------- render ---------- */
+function render(){
+  var C=CLASSES[state.cls];
+  var cur=calc(state.pd,state.lgd,state.m,state.cls,state.s);
+
+  $("pd-val").textContent=pdText(state.pd);
+  $("lgd-val").textContent=(state.lgd*100).toFixed(0)+"%";
+  $("m-val").textContent=state.m.toFixed(1)+" yr";
+  $("s-val").textContent="€"+state.s+"m";
+
+  $("ctl-m").classList.toggle("is-off",!C.mat);
+  $("m-note").textContent=C.mat?"":"No maturity adjustment for retail";
+  $("ctl-s").hidden=!C.size;
+  $("lg-ghost").hidden=!state.compare;
+
+  $("s-r").textContent=cur.R.toFixed(4);
+  $("s-r-sub").textContent=C.mat?"PD-dependent":"fixed by class";
+  $("s-k").textContent=pct(cur.k,2);
+  $("s-rw").textContent=pct(cur.rw,1);
+  $("s-cap").textContent="€"+(10*cur.rw*0.08).toFixed(2)+"m";
+
+  $("f-lgd").textContent=(state.lgd*100).toFixed(0)+"%";
+  $("f-g").textContent=inv(state.pd).toFixed(3);
+  $("f-1r").textContent=(1-cur.R).toFixed(3);
+  $("f-rr").textContent=(cur.R/(1-cur.R)).toFixed(3);
+  $("f-q").textContent=Q999.toFixed(3);
+  $("f-pdlgd").textContent=(state.pd*state.lgd*100).toFixed(3)+"%";
+  $("f-ma").textContent=cur.ma.toFixed(3);
+
+  drawChart(cur); drawR(); drawTerms(cur);
+}
+render();
+</script>

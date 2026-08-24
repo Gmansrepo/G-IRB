@@ -1,0 +1,41 @@
+---
+import '../styles/tokens.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { url } from '../lib/url';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const {
+  title,
+  description = 'A working knowledge base on IRB credit risk models — PD, LGD and EAD estimation, calibration, stress testing and the regulation behind them.',
+} = Astro.props;
+
+const full = title === 'G-IRB' ? title : `${title} · G-IRB`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap"
+    />
+  </head>
+  <body>
+    <Nav />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

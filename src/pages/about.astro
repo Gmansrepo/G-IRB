@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="About" description="Why G-IRB exists — a structured knowledge base on internal ratings-based models.">
+  <div class="wrap page">
+    <header class="head">
+      <p class="eyebrow">About</p>
+      <h1>Why this site exists</h1>
+    </header>
+
+    <div class="prose">
+      <p>
+        Whether it is new guidelines concerning model development, changes to the CRR, or
+        best practice in machine learning methods, the IRB landscape keeps evolving at a
+        rapid pace. Keeping up with it is one problem; retaining what you worked out last
+        time is a different and harder one.
+      </p>
+      <p>
+        This site is an answer to the second problem &mdash; cognitive offloading. A
+        structured space to capture, clarify and revisit what gets learned across projects,
+        regulations and technical methodologies, written to be re-read rather than read once.
+      </p>
+      <p>
+        It now serves a dual purpose: a knowledge base for ongoing learning, and a resource
+        for anyone else working with IRB models. The subjects are PD, LGD and EAD model
+        development, regulatory interpretation, and machine learning applications.
+      </p>
+
+      <h2>A note on the explainers</h2>
+      <p>
+        Wherever a topic is easier to understand by moving it than by reading about it,
+        there is an interactive figure instead of a static chart. Everything runs in your
+        browser, so you can push the inputs to places a worked example would not go, and
+        the arithmetic is left visible rather than hidden behind a result.
+      </p>
+
+      <h2>Scope and disclaimer</h2>
+      <p>
+        Everything here is illustrative. Nothing substitutes for the regulation itself,
+        nothing constitutes advice, and nothing represents the view of any employer or
+        institution. Where a figure reproduces a regulatory formula it is stated plainly
+        which article it comes from, so you can go and check it.
+      </p>
+      <p>
+        Errors are mine. If you find one, the source is public &mdash; corrections are
+        welcome.
+      </p>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 48px 72px; }
+  .head { display: flex; flex-direction: column; gap: 12px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); margin-bottom: 34px; }
+</style>

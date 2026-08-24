@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { url } from '../../lib/url';
+
+const topics = (await getCollection('topics', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<Base title="Topics" description="Explainers on IRB model development — calibration, stress testing, discriminatory power and more.">
+  <div class="wrap page">
+    <header class="head">
+      <p class="eyebrow">Topics</p>
+      <h1>Explainers</h1>
+      <p class="lede">
+        Each one is a working note, written to be re-read. Where a concept moves,
+        the figure moves with it.
+      </p>
+    </header>
+
+    <ul class="list">
+      {topics.map((t) => (
+        <li>
+          <a href={url(`topics/${t.id}`)}>
+            <span class="t-title">{t.data.title}</span>
+            <span class="t-sum">{t.data.summary}</span>
+            <span class="meta">
+              <time datetime={t.data.date.toISOString()}>
+                {t.data.date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' })}
+              </time>
+              {t.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    {topics.length === 0 && <p class="empty">No topics published yet.</p>}
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 48px 72px; }
+  .head { display: flex; flex-direction: column; gap: 12px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+  .lede { max-width: 58ch; color: var(--ink-2); font-size: 16px; }
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .list li { border-bottom: 1px solid var(--rule); }
+  .list a { display: flex; flex-direction: column; gap: 6px; padding: 22px 4px; text-decoration: none; color: inherit; }
+  .list a:hover .t-title { color: var(--accent); }
+  .t-title { font-family: var(--font-display); font-size: var(--step-2); }
+  .t-sum { color: var(--ink-2); font-size: 14px; max-width: 66ch; }
+  .meta { display: flex; gap: 12px; align-items: center; margin-top: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+  .tag { border: 1px solid var(--rule); border-radius: 2px; padding: 1px 7px; letter-spacing: .06em; }
+  .empty { color: var(--ink-3); font-size: 14px; }
+</style>

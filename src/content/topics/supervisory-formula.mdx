@@ -1,0 +1,91 @@
+---
+title: "From PD to capital: reading the supervisory formula"
+summary: "The IRB risk-weight function compresses a whole portfolio into one closed-form curve. What each term does, what it assumes, and where the assumptions bite."
+date: 2026-08-22
+tags: ["capital", "CRR", "foundations"]
+---
+
+import SupervisoryFormula from '../../components/viz/SupervisoryFormula.astro';
+
+Almost every discussion about an IRB model ends at the same place: a risk weight.
+Whatever effort went into the rating system, the calibration, the downturn LGD
+analysis, the output is three numbers — PD, LGD, M — pushed through one closed-form
+expression laid down in CRR Article 153.
+
+It is worth knowing that expression well, because it decides which modelling
+decisions actually matter and which ones the formula quietly flattens away.
+
+<SupervisoryFormula />
+
+## The model underneath
+
+The formula is not an empirical fit. It is the closed-form solution to a specific
+model — the asymptotic single risk factor (ASRF) model, built on Vasicek's
+extension of Merton. Three assumptions get you there:
+
+1. **One systematic factor.** Every borrower's fortunes depend on a single common
+   driver plus idiosyncratic noise. Call the common driver the economy.
+2. **Infinite granularity.** The portfolio holds infinitely many infinitesimally
+   small exposures, so idiosyncratic risk diversifies away completely and only the
+   systematic component survives.
+3. **Portfolio invariance.** As a consequence, the capital for an exposure depends
+   only on that exposure's own characteristics — never on what else is in the book.
+
+The third one is the reason the framework is usable at all. Capital becomes additive:
+each exposure carries its own charge, and the portfolio total is just the sum. No
+covariance matrix, no portfolio optimisation, no bank-specific concentration model.
+
+It is also the assumption that is plainly false. A real portfolio is not infinitely
+granular and rarely rests on a single factor. That gap is exactly what Pillar 2 is
+for — concentration risk is not missing from the framework by oversight, it was
+deliberately pushed outside the Pillar 1 formula.
+
+## Reading the terms
+
+**The inner `N(·)` is a conditional default probability.** Take the PD, restate it as
+a threshold on a standard normal scale with `G(PD)`, then ask: if the systematic
+factor comes in at its 99.9th-percentile worst outcome, what share of these borrowers
+falls below the threshold? That share is the default rate in a one-in-a-thousand year.
+
+**`G(0.999)` is a supervisory choice, not a model output.** It is fixed at 3.09 and
+corresponds to a 99.9% confidence level over a one-year horizon — roughly, a
+solvency standard where the bank survives all but a one-in-a-thousand year. Nothing
+in the maths requires 0.999; it was set by supervisors and does not move.
+
+**Subtracting `PD · LGD` removes expected loss.** Capital covers *unexpected* loss
+only. Expected loss is meant to be covered by provisions, which is why the two
+frameworks — IRB capital and IFRS 9 impairment — have to be read together but never
+add up cleanly.
+
+**`R` is where the exposure class lives.** For corporates, correlation falls from
+0.24 to 0.12 as PD rises. The intuition: a borrower already close to default is
+driven more by its own circumstances than by the economy, so its defaults are less
+synchronised with everyone else's. Toggle the overlay above and the entire difference
+between a mortgage and a revolving retail exposure is visible as a gap between two
+curves — same LGD, different correlation assumption.
+
+**`MA` stretches the charge for longer exposures**, and it is normalised so that
+`MA = 1` at one year, not at 2.5. This trips people up: at the standard corporate
+assumption of M = 2.5 years the adjustment is already about 1.26, not 1. Retail
+carries no maturity adjustment at all.
+
+## What this means in practice
+
+Move the PD slider across its range and watch the risk weight. Two things stand out.
+
+The curve is **steepest at low PD**. Going from 0.1% to 0.3% roughly doubles the
+risk weight; going from 10% to 30% barely moves it. For a good-quality portfolio,
+small changes in calibration translate into large changes in capital — which is why
+calibration disputes are rarely academic, and why the margin of conservatism gets
+the scrutiny it does.
+
+**LGD scales the whole thing almost linearly**, while PD does not. Halving LGD
+halves the risk weight at every PD. That asymmetry is worth remembering when
+deciding where to spend model development effort: an LGD assumption applies its
+error uniformly, whereas a PD error is amplified or damped depending on where you
+sit on the curve.
+
+---
+
+*Next: calibration — how observed default rates become a PD per grade, and what the
+central tendency and margin of conservatism actually do to that mapping.*

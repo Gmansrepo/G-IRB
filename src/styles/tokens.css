@@ -1,0 +1,149 @@
+/* ---------------------------------------------------------------
+   G-IRB design tokens
+   Palette and type extracted from the supervisory formula explorer
+   so every page and every visualisation share one system.
+
+   Three theme states must all resolve:
+     :root                          -> light (default, un-stamped)
+     prefers-color-scheme: dark     -> dark, unless explicitly light
+     [data-theme="dark"|"light"]    -> explicit choice always wins
+   Never declare a colour only inside a media/[data-theme] block.
+--------------------------------------------------------------- */
+
+:root {
+  --ground:#F0F2F1; --surface:#FAFBFA; --surface-2:#E7EAE8;
+  --ink:#121815; --ink-2:#5A635E; --ink-3:#8A938E;
+  --rule:#D3D8D5; --rule-2:#E3E7E5;
+  --accent:#A63A2E; --accent-soft:#A63A2E1F; --accent-ink:#8A2E24;
+  --teal:#1F6F72; --amber:#B0721F;
+  --focus:#1F6F72;
+
+  --font-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --font-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --measure:65ch;
+  --page:1180px;
+  --step--1:0.875rem;
+  --step-0:1rem;
+  --step-1:1.25rem;
+  --step-2:1.5rem;
+  --step-3:2rem;
+  --step-4:clamp(2.3rem,5.2vw,3.5rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#101412; --surface:#181E1B; --surface-2:#222926;
+    --ink:#E8EDEA; --ink-2:#9AA5A0; --ink-3:#6E7975;
+    --rule:#2C3430; --rule-2:#232B27;
+    --accent:#E0705C; --accent-soft:#E0705C24; --accent-ink:#EE8975;
+    --teal:#5FB8BB; --amber:#D9A44B;
+    --focus:#5FB8BB;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:#101412; --surface:#181E1B; --surface-2:#222926;
+  --ink:#E8EDEA; --ink-2:#9AA5A0; --ink-3:#6E7975;
+  --rule:#2C3430; --rule-2:#232B27;
+  --accent:#E0705C; --accent-soft:#E0705C24; --accent-ink:#EE8975;
+  --teal:#5FB8BB; --amber:#D9A44B;
+  --focus:#5FB8BB;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin: 0;
+}
+h1 { font-size: var(--step-4); line-height: 1.04; }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-2); }
+
+p { margin: 0; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--accent-ink); }
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.94em; }
+
+/* ---- shared primitives ---- */
+.wrap { width: 100%; max-width: var(--page); margin-inline: auto; padding-inline: 28px; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Full-bleed grid: text sits in a readable measure on the left, while any
+   child marked .bleed spans the whole page width for figures. */
+.prose {
+  display: grid;
+  grid-template-columns:
+    [full-start content-start] min(var(--measure), 100%)
+    [content-end] minmax(0, 1fr) [full-end];
+  gap: 1.1em 0;
+}
+.prose > * { grid-column: content; }
+.prose > .bleed, .prose > figure { grid-column: full; }
+.prose h2 { margin-top: 1.4em; }
+.prose h3 { margin-top: 1em; }
+.prose ul, .prose ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: .45em; }
+.prose blockquote {
+  margin: 0; padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--accent);
+  color: var(--ink-2); font-style: italic;
+}
+.prose :is(table, pre) { overflow-x: auto; display: block; max-width: 100%; }
+.prose pre {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 14px 16px; font-size: 13px; line-height: 1.5;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 20px;
+}
+
+/* Escape hatch so a visualisation can break the text measure */
+.bleed { width: 100%; }
+
+@media (max-width: 900px) { .wrap { padding-inline: 18px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

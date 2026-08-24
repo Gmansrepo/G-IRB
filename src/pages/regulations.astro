@@ -1,0 +1,138 @@
+---
+import Base from '../layouts/Base.astro';
+import raw from '../data/GL201716.tsv?raw';
+
+/* The source TSV carries an "Explanation" column that is still mostly
+   authoring placeholders. Anything that is not a real explanation is
+   treated as absent rather than published. */
+const PLACEHOLDER = /^explain this to me/i;
+
+type Row = Record<string, string>;
+
+const lines = raw.split('\n').filter((l) => l.trim().length > 0);
+const headers = lines[0].split('\t').map((h) => h.trim());
+const rows: Row[] = lines.slice(1).map((line) => {
+  const cells = line.split('\t');
+  return headers.reduce<Row>((o, h, i) => {
+    o[h] = (cells[i] ?? '').trim();
+    return o;
+  }, {});
+});
+
+/* Group into Section > Subsection, preserving document order. */
+type Article = { article: string; text: string; explanation: string | null };
+type Subsection = { name: string; articles: Article[] };
+type Section = { name: string; subsections: Subsection[] };
+
+const sections: Section[] = [];
+for (const r of rows) {
+  if (!r.Text && !r.Article) continue;
+  const sName = r.Section || '—';
+  const subName = r.Subsection || '';
+  let sec = sections.at(-1);
+  if (!sec || sec.name !== sName) {
+    sec = { name: sName, subsections: [] };
+    sections.push(sec);
+  }
+  let sub = sec.subsections.at(-1);
+  if (!sub || sub.name !== subName) {
+    sub = { name: subName, articles: [] };
+    sec.subsections.push(sub);
+  }
+  const exp = r.Explanation && !PLACEHOLDER.test(r.Explanation) ? r.Explanation : null;
+  sub.articles.push({ article: r.Article, text: r.Text, explanation: exp });
+}
+
+const total = rows.filter((r) => r.Text).length;
+const explained = rows.filter(
+  (r) => r.Explanation && !PLACEHOLDER.test(r.Explanation)
+).length;
+const source = rows[0]?.Regulation ?? 'EBA/GL/2017/16';
+---
+<Base
+  title="Regulations"
+  description="EBA guidelines on PD and LGD estimation, article by article, with plain-language notes."
+>
+  <div class="wrap page">
+    <header class="head">
+      <p class="eyebrow">{source}</p>
+      <h1>Guidelines on PD and LGD estimation</h1>
+      <p class="lede">
+        The text as issued, article by article. Where I have written a plain-language
+        note, the article carries an <strong>Explain</strong> toggle.
+      </p>
+      <p class="meta">
+        {total} articles &middot; {explained} with notes
+      </p>
+    </header>
+
+    {sections.map((sec) => (
+      <section class="sec">
+        <h2>{sec.name}</h2>
+        {sec.subsections.map((sub) => (
+          <div class="sub">
+            {sub.name && <h3>{sub.name}</h3>}
+            {sub.articles.map((a) => (
+              <div class="art" id={a.article ? `art-${a.article}` : undefined}>
+                {a.article && (
+                  <a class="num" href={`#art-${a.article}`}>{a.article}</a>
+                )}
+                <div class="art-body">
+                  <p>{a.text}</p>
+                  {a.explanation && (
+                    <details>
+                      <summary>Explain</summary>
+                      <p class="exp">{a.explanation}</p>
+                    </details>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 48px 72px; }
+  .head { display: flex; flex-direction: column; gap: 12px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); margin-bottom: 12px; }
+  .lede { max-width: 62ch; color: var(--ink-2); font-size: 16px; }
+  .meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); }
+
+  .sec { padding-top: 34px; }
+  .sec h2 { font-size: var(--step-2); padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .sub { padding-top: 18px; }
+  .sub h3 {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 12px;
+  }
+
+  .art { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 16px; padding: 12px 0; align-items: baseline; }
+  .art + .art { border-top: 1px solid var(--rule-2); }
+  .num {
+    font-family: var(--font-mono); font-size: 12px; color: var(--ink-3);
+    text-decoration: none; font-variant-numeric: tabular-nums;
+  }
+  .num:hover { color: var(--accent); }
+  .art:target .num { color: var(--accent); font-weight: 500; }
+  .art-body { max-width: 74ch; display: flex; flex-direction: column; gap: 8px; }
+  .art-body p { font-size: 14.5px; color: var(--ink-2); }
+
+  details { border-left: 2px solid var(--accent); padding-left: 14px; }
+  summary {
+    cursor: pointer; font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: '+ '; }
+  details[open] summary::before { content: '− '; }
+  .exp { margin-top: 8px; color: var(--ink); font-size: 14px; }
+
+  @media (max-width: 700px) {
+    .art { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
